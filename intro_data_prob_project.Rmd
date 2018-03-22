@@ -1,0 +1,165 @@
+---
+title: "Exploring the BRFSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+```{r include=FALSE}
+knitr::opts_chunk$set(fig.align = 'center', fig.width = 10, fig.height = 6)
+```
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+### Load data
+
+
+```{r load-data, cache=TRUE, message=FALSE}
+load("brfss2013.RData")
+library(ggplot2)
+```
+
+
+
+* * *
+
+## Part 1: Data
+
+Since the data collected for BRFSS is basically an observational study and not an experiment, we can not infer a causal relationship between any of the variables in it, even if we find correlations. As for the sampling, it seems that stratified sampling has been used here, since all states have been made part of the study.  
+The sampling within the states seems fairly random and inclusive for a survey with such objectives.  
+Since this is not an experiment, assessing whether random assignment was used is irrelevant here.
+
+
+* * *
+
+## Part 2: Research questions
+
+**Research quesion 1:**
+One question that we can explore using the data we have is if there is any correlation between a person's mental health, and their financial status, or their financial worries. For that we can try to find patterns between and the person's income category and the number days they felt that their mental health was not good, or if they have ever been told that they have a depressive disorder. We can also try to find patterns between the latter two variables their being worried/stressed about having enough money for nutrition or rent. 
+
+**Research quesion 2:**
+Another question that we can explore using the data we have is if there is an association between a person's mental health, and the level of physical activity they engage in. However, we might not be able to conclude which affects which, or if there is any causal relationship between them at all. We can look for patterns of association between their physical activity categories and physical activity index, and the number of days they felt their mental health was not good, or if they have been told they have a depressive disorder. We can also explore any relation between their activity index and how often they felt worthless or depressed, which might be indicative of an emotional health issue.
+
+**Research quesion 3:**
+One other question that we can explore from the given data is if people's sleeping patterns, and their mental health is connected. More concretely, if we can find any pattern between inadequate, or less than average sleep (for which we will make a boolean variable indicating if the respondent sleeps less than 7 hours, which is the median, as well as the mean sleep time between the respondents), and if they have ever been told they have a depressive disorder, or the number of days they have suffered from poor mental health, or how often they felt depressed or worthless.
+
+* * *
+
+## Part 3: Exploratory data analysis
+
+
+**Research quesion 1: Exploring assossiation between a person's financial status and/or worries, and their mental health**
+
+We can start with looking for association between the person's income category, and days they felt their mental health was not good.
+```{r, fig.width=10}
+attach(brfss2013)
+boxplot(menthlth~X_incomg, main="How often felt mental health was not good, by their income category", xlab="Income category", ylab='# of Days mental health not good during past month', names=c('<$15k', '>=$15k & <$25k', '>=$25k & <35k', '>=35k & <$50k', '>=$50k'))
+```
+Though this graph shows a difference in the number of people of who felt that their mental health was not good between the lowest income category and the highest, but the mean is still at zero number of days, and so are the majority of the observations, since most people have never felt any mental sickness. If we filter the data by the people who actually have felt mental sickness even for one day, we might see a significant difference.
+```{r}
+mentsick <- subset(brfss2013, menthlth>0 & menthlth<31)
+with(mentsick, boxplot(menthlth~X_incomg, main="How often felt mental health was not good, by their income category", xlab="Income category", ylab='# of Days mental health not good during past month', names=c('<$15k', '>=$15k & <$25k', '>=$25k & <35k', '>=35k & <$50k', '>=$50k')))
+```
+This shows a considerable difference between the number days people in general have reported feeling mentally unhealthy among people who have reported feeling that way among the different categories of income. A significantly higher proportion of people earning less that $15000 report feeling mentally unhealthy for a higher number of days compared to the higher earning people.   
+  
+Exploring association between their income category, and if they have ever been told that they suffer from a depressive disorder. 
+```{r}
+table(X_incomg, addepev2)
+```
+These numbers won't clarify the picture until we take proportions. Taking proportions along the rows, i.e. the proportion of people who have been told they have a depressive disorder, within each income category
+```{r}
+prop.table(table(X_incomg, addepev2), 1)
+```
+If we look at the proportion of people diagnosed with a depressive disorder to people who have not been, we see that the proportion is higher among people earning less that $15000 (35% of those people have been diagnosed with it), and that proportion steadily decreases as the income category rises, until we see only 15% of people earning $50000 or more reporting being diagnosed.  
+  
+We can also see if there is any association between a person's income category, and how often they felt depressed or worthless during the past 30 days. For this we take the proportion of how often people felt depressed (1st table) or worthless (2nd table) in the past month, in each income category.
+```{r}
+prop.table(table(X_incomg, misdeprd), 1)
+prop.table(table(X_incomg, miswtles), 1)
+```
+We see here that the proportion of people who felt depressed or worthless all the time was higher in people earning less than /$15000 (3% of such people felt depressed, and 5% felt worthless all the time) than those earning /$50000 or more (0.1% of such people felt depressed  and 0.2% felt worthless all the time). The difference in proportion between the two groups is also apparent in other frequencies of feeling depressed or worthless, all the way until we look at the proportion of people who never feel depressed or worthless among those earning the least (66% and 68% respectively), and those earning the most (92% and 93% respectively). This might indicate that such feelings are more prevalent among people earning lesser than in those earning more.     
+Now we can explore the possibility of association between how often they were worried about having money for food, and if they have ever been told that they suffer from a depressive disorder
+```{r}
+table(scntmeal, addepev2)
+```
+Taking proportions again, along the rows, i.e. the proportion of people who have been told they have a depressive disorder, across each category of people, classified by their responses to how often they felt worried about having money for food (1st table) or to pay rent (2nd table).
+```{r}
+prop.table(table(scntmeal, addepev2), 1)
+prop.table(table(scntmony, addepev2), 1)
+```
+This shows that a 51% of people who have always worried about having enough money for food and 47% of people who have always worried about having money for rent have been diagnosed with a depressive disorder. This percentage steadily declines with people who have reported being worried about food or rent less frequently till we see that 14% of people who have never been worried for food and a similar % of people who have never worried for rent have been diagnosed with a depressive disorder.  
+  
+To wrap up, we can further explore the associations between how many days a person felt that their mental health was not good in the past month, and how often they felt worried or stressed about having enough money to buy nutritious meals or paying the rent during the past year.
+```{r}
+boxplot(menthlth~scntmeal, main="Mental health not good, by how often worried about having money for food", xlab="Felt worried about having money for food during past year", ylab='# of Days mental health not good during past month')
+boxplot(menthlth~scntmony, main="Mental health not good, by how often worried about having money for rent", xlab="Felt worried about having money to pay rent during past year", ylab='# of Days mental health not good during past month')
+```
+These plots clearly show that a higher proportion of people who have to worry about being able to pay for food or rent report higher number of days they felt mentally unhealthy compare to those never have to worry about either. So much so that the number of days the latter group has reported feeling mentally unhealthy is concentrated at zero.
+
+**Research quesion 2: Exploring association between a person's physical activity and their mental health**
+
+For this question we can explore respondents' mental health status, specifically how many days in the past month they felt they were not in good mental health, for each category of people classified by their physical activity level (1st boxplot), and by their physical activity index (2nd boxplot).
+```{r}
+boxplot(menthlth~X_pacat1, main="# of days felt mentally unhealthy by physical activity", xlab="Physical activity category", ylab="number of days felt in bad mental health")
+boxplot(menthlth~X_paindx1, main="# of days felt mentally unhealthy by physical activity index", ylab="number of days felt in bad mental health")
+```
+This graph shows that the number of days the respondents felt in bad mental health is on average more in people who are classified as inactive, or did not meat aerobic recommendations, compared to those who did, or were sufficiently active.  
+  
+Now we will look for associations between whether they have ever been diagnosed with a depressive disorder, and their physical activity. For this we will take a look at the proportion of people diagnosed with the said condition, across each category of people classified by their physical activity.
+```{r}
+prop.table(table(addepev2, X_pacat1), 2)
+prop.table(table(addepev2, X_paindx1), 2)
+```
+These tables show that the among the people who are classified as highly active, 16% have been told that they have a depressive disorder, and so have 16% of those who met aerobic recommendations. This proportion steadily increases as their activity category indicates lesser activity, until we see that 25% of people who are inactive, and 24% who did not meet the aerobic recommendations have been diagnosed.  
+  
+Exploring association between how often they felt depressed (1st table) or worthless (2nd table) and their physical activity. Showing proportion of people with each response to feeling worthless or depressed, across categories of people classified by their physical activity levels.
+The following table shows the proportion of people who felt depressed or worthless among each category
+```{r}
+prop.table(table(misdeprd, X_pacat1), 2)
+prop.table(table(miswtles, X_pacat1), 2)
+```
+These tables indicate that 0.3% of highly active people have reported feeling depressed and 0.5% reported feeling worthless, all the time, whereas 90% percent of them never felt depressed or worthless. The ratios change gradually as level of activity decreases until we see 1.7% of inactive people feeling depressed and 2.4% feeling worthless all the time, compared the 80% and 81% who never felt the respective feelings at all. Although the ratios are very small, but the trend of slow increase in ratio of people with such feelings is apparent as activity levels go down.
+
+**Research quesion 3: Exploring assossiation between lack of sleep, and mental health**
+
+For this we have created another variable, classifying people into two categories: Those who got slept 7 hours or more (which is the mean and median sleep duration according to the survey), and those who slept less than 7 hours a day. After that we will explore the possibility of correlation between the respondents being diagnosed with a depressive disorder, and if they get adequate sleep. Displaying proportion of people who were diagnosed, classified by if they get a minimum of 7 hours of sleep or not.
+```{r}
+detach(brfss2013)
+brfss2013$adq_sleep <- ifelse(brfss2013$sleptim1<7, "no", "yes")
+attach(brfss2013)
+prop.table(table(addepev2, adq_sleep), 2)
+```
+We see here that 25% of people here who reported sleeping less than 7 hours have been diagnosed with a depressive disorder, compared to 17% of those who get 7 hours or more.  
+  
+Exploring association between number of days they felt their mental health was not good, and if they got adequate sleep or not
+```{r}
+# excluding rows with invalid mental health values
+with(subset(brfss2013, menthlth<30), boxplot(menthlth~adq_sleep, xlab="Get at least 7 hrs of sleep or not", ylab="# of days felt mental health not good"))
+```
+We see here that the number of days the respondents felt in bad mental health is concentrated at zero for those who get at least 7 hrs of sleep, whereas in people who get lesser sleep, bad mental health days are more prevalent. We can also take a look at the same after filtering out the people who have never felt bad mental health.
+```{r}
+with(mentsick, boxplot(menthlth~adq_sleep, xlab="Get at least 7 hrs of sleep or not", ylab="# of days felt mental health not good"))
+```
+This shows that people who are getting lesser than 7 hrs of sleep are reporting more days on average when their mental health was not good.  
+  
+Proportion of people who got adequate sleep or not, in each response category of how often they felt worthless or depressed.
+```{r}
+prop.table(table(misdeprd, adq_sleep), 1)
+prop.table(table(miswtles, adq_sleep), 1)
+```
+These tables show that out of the people who reported feeling depressed all the time, 69% were not getting enough sleep. Same goes for 63% who felt worthless all the time. Comparing this to people who never felt depressed or worthless, only 28% were not getting adequate sleep. We can also see the proportions across the columns to find out the proportion of people having such feelings in those that did not get enough sleep.
+
+```{r}
+prop.table(table(misdeprd, adq_sleep), 2)
+prop.table(table(miswtles, adq_sleep), 2)
+```
+We see here that there is a difference in proportion of people who felt depressed or worthless between those who have adequate sleep or not, albeit a small one.
+

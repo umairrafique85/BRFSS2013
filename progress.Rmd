@@ -1,0 +1,37 @@
+---
+title: "Progress record"
+author: "Umair"
+date: "March 7, 2018"
+output: html_document
+---
+
+```{r cache=TRUE}
+load("brfss2013.RData")
+library(tidyverse)
+```
+
+```{r}
+ggplot(data = brfss2013, aes(x = employ1)) + geom_histogram(stat = 'count')+theme(axis.text.x = element_text(angle = 90))
+table(brfss2013$employ1)
+```
+
+```{r}
+ggplot(data = brfss2013, aes(x = sex)) + geom_histogram(stat = 'count')+theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+ggplot(data = brfss2013, aes(x = cadult)) + geom_histogram(stat = 'count')+theme(axis.text.x = element_text(angle = 90))
+```
+```{r}
+ggplot(data = brfss2013, aes(x = pregnant)) + geom_histogram(stat = 'count')+theme(axis.text.x = element_text(angle = 90))
+```
+```{r}
+ggplot(data = brfss2013, aes(x = educa)) + geom_histogram(stat = 'count')+theme(axis.text.x = element_text(angle = 90))
+```
+```{r}
+ggplot(data = brfss2013, aes(x = income2)) + geom_histogram(stat = 'count')+theme(axis.text.x = element_text(angle = 90))
+```
+
+
+
+
